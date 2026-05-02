@@ -1,10 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import { JWT_EXPIRES_IN } from './config.js';
 import tokenRouter from './routes/token.js';
 import entriesRouter from './routes/entries.js';
 
-export const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-in-prod';
-export const JWT_EXPIRES_IN = '1m';
 const PORT = process.env.PORT ?? 3001;
 
 const app = express();

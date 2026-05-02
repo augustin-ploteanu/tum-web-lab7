@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET, JWT_EXPIRES_IN } from '../index.js';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config.js';
 
 const router = Router();
 
