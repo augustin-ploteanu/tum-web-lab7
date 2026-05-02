@@ -3,10 +3,12 @@ import { CATEGORY_LABELS } from '../types';
 import { ListEntryCard } from './ListEntryCard';
 import { StatsPanel } from './StatsPanel';
 import { ViewToggle } from './ViewToggle';
+import { Pagination } from './Pagination';
 import type { ViewMode } from './ViewToggle';
 import type { Category, ListEntry } from '../types';
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as Category[];
+const PAGE_SIZE = 20;
 
 interface MyListProps {
   entries: ListEntry[];
@@ -53,6 +55,7 @@ export function MyList({ entries, onEdit, onRemove }: MyListProps) {
   const [sort, setSort] = useState<SortKey>('added');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [page, setPage] = useState(1);
 
   const categoryEntries =
     activeCategory === 'all'
@@ -64,7 +67,31 @@ export function MyList({ entries, onEdit, onRemove }: MyListProps) {
     ? categoryEntries.filter((e) => getTitle(e).includes(query))
     : categoryEntries;
 
-  const visible = sortEntries(filtered, sort, sortDir);
+  const sorted = sortEntries(filtered, sort, sortDir);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const visible = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function handlePageChange(p: number) {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Reset to page 1 when filters change
+  function handleCategoryChange(cat: Category) {
+    setActiveCategory(cat);
+    setPage(1);
+  }
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
+
+  function handleSortChange(value: SortKey) {
+    setSort(value);
+    setPage(1);
+  }
 
   return (
     <div className="mylist">
@@ -93,7 +120,7 @@ export function MyList({ entries, onEdit, onRemove }: MyListProps) {
             role="tab"
             aria-selected={activeCategory === cat}
             className={`mylist__tab${cat !== 'all' ? ` mylist__tab--${cat}` : ''}${activeCategory === cat ? ' mylist__tab--active' : ''}`}
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => handleCategoryChange(cat)}
           >
             {CATEGORY_LABELS[cat]}
           </button>
@@ -111,13 +138,13 @@ export function MyList({ entries, onEdit, onRemove }: MyListProps) {
             type="search"
             placeholder="Search in list…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             aria-label="Search entries in list"
           />
           {search && (
             <button
               className="mylist__search-clear"
-              onClick={() => setSearch('')}
+              onClick={() => handleSearchChange('')}
               aria-label="Clear search"
             >
               ×
@@ -131,7 +158,7 @@ export function MyList({ entries, onEdit, onRemove }: MyListProps) {
             id="list-sort"
             className="mylist__sort-select"
             value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
+            onChange={(e) => handleSortChange(e.target.value as SortKey)}
           >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -189,6 +216,7 @@ export function MyList({ entries, onEdit, onRemove }: MyListProps) {
             ))}
           </div>
         )}
+        <Pagination page={currentPage} totalPages={totalPages} onChange={handlePageChange} />
       </div>
     </div>
   );

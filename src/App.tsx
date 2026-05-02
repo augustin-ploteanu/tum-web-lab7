@@ -16,7 +16,7 @@ function App() {
   const [view, setView] = useState<View>('list')
   const [pendingItem, setPendingItem] = useState<WatchableItem | null>(null)
 
-  const { results, status, error } = useSearch(query)
+  const { results, status, error, page, totalPages, setPage } = useSearch(query)
   const { entries, addOrUpdate, remove, getEntry } = useWatchlist()
 
   function handleAddClick(item: WatchableItem) {
@@ -78,6 +78,9 @@ function App() {
               status={status}
               error={error}
               query={query}
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
               getEntry={isInList}
               onAddClick={handleAddClick}
             />

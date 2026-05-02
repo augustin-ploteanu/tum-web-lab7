@@ -7,20 +7,31 @@ interface UseSearchResult {
   results: WatchableItem[];
   status: SearchStatus;
   error: string | null;
+  page: number;
+  totalPages: number;
+  setPage: (page: number) => void;
 }
 
 export function useSearch(query: string): UseSearchResult {
   const [results, setResults] = useState<WatchableItem[]>([]);
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [page, setPageState] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const debouncedQuery = useDebounce(query, 400);
+
+  // Reset to page 1 when the query changes
+  useEffect(() => {
+    setPageState(1);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     if (!debouncedQuery.trim()) {
       setResults([]);
       setStatus('idle');
       setError(null);
+      setTotalPages(1);
       return;
     }
 
@@ -29,7 +40,7 @@ export function useSearch(query: string): UseSearchResult {
     setStatus('loading');
     setError(null);
 
-    searchMulti(debouncedQuery)
+    searchMulti(debouncedQuery, page)
       .then((data) => {
         if (cancelled) return;
         const watchable = data.results.filter(
@@ -37,6 +48,7 @@ export function useSearch(query: string): UseSearchResult {
             item.media_type === 'movie' || item.media_type === 'tv'
         );
         setResults(watchable);
+        setTotalPages(data.total_pages);
         setStatus('success');
       })
       .catch((err: unknown) => {
@@ -48,7 +60,12 @@ export function useSearch(query: string): UseSearchResult {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery]);
+  }, [debouncedQuery, page]);
 
-  return { results, status, error };
+  function setPage(p: number) {
+    setPageState(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  return { results, status, error, page, totalPages, setPage };
 }

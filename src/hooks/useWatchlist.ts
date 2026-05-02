@@ -1,36 +1,34 @@
 import { useState, useEffect } from 'react';
 import type { ListEntry } from '../types';
-
-const STORAGE_KEY = 'mml_watchlist';
-
-function loadFromStorage(): ListEntry[] {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as ListEntry[];
-  } catch {
-    return [];
-  }
-}
+import { fetchEntries, createEntry, updateEntry, removeEntry } from '../api/watchlist';
 
 export function useWatchlist() {
-  const [entries, setEntries] = useState<ListEntry[]>(loadFromStorage);
+  const [entries, setEntries] = useState<ListEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }, [entries]);
+    fetchEntries()
+      .then((page) => setEntries(page.entries))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  function addOrUpdate(entry: ListEntry) {
+  async function addOrUpdate(entry: ListEntry) {
+    const exists = entries.some((e) => e.id === entry.id);
+    const saved = await (exists ? updateEntry(entry) : createEntry(entry));
     setEntries((prev) => {
-      const idx = prev.findIndex((e) => e.id === entry.id);
+      const idx = prev.findIndex((e) => e.id === saved.id);
       if (idx >= 0) {
         const next = [...prev];
-        next[idx] = entry;
+        next[idx] = saved;
         return next;
       }
-      return [...prev, entry];
+      return [...prev, saved];
     });
   }
 
-  function remove(id: string) {
+  async function remove(id: string) {
+    await removeEntry(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
   }
 
@@ -38,5 +36,5 @@ export function useWatchlist() {
     return entries.find((e) => e.id === id) ?? null;
   }
 
-  return { entries, addOrUpdate, remove, getEntry };
+  return { entries, loading, addOrUpdate, remove, getEntry };
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SearchResultCard } from './SearchResultCard';
 import { ViewToggle } from './ViewToggle';
+import { Pagination } from './Pagination';
 import type { ViewMode } from './ViewToggle';
 import type { SearchStatus, WatchableItem } from '../types';
 
@@ -9,6 +10,9 @@ interface SearchResultsProps {
   status: SearchStatus;
   error: string | null;
   query: string;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   getEntry: (id: string) => boolean;
   onAddClick: (item: WatchableItem) => void;
 }
@@ -18,6 +22,9 @@ export function SearchResults({
   status,
   error,
   query,
+  page,
+  totalPages,
+  onPageChange,
   getEntry,
   onAddClick,
 }: SearchResultsProps) {
@@ -73,7 +80,7 @@ export function SearchResults({
       <div className="search-results__header">
         <p className="search-results__count" aria-live="polite">
           {results.length} result{results.length !== 1 ? 's' : ''} for "
-          <strong>{query}</strong>"
+          <strong>{query}</strong>" — page {page} of {totalPages}
         </p>
         <ViewToggle viewMode={viewMode} onChange={setViewMode} />
       </div>
@@ -88,6 +95,7 @@ export function SearchResults({
           />
         ))}
       </div>
+      <Pagination page={page} totalPages={totalPages} onChange={onPageChange} />
     </section>
   );
 }
