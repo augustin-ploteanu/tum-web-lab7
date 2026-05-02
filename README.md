@@ -2,7 +2,7 @@
 
 A personal movie and TV series tracker. Search for titles, organize them into categories, track episodes, grade entries, and keep notes, all saved locally in your browser.
 
-[Live Demo](https://augustin-ploteanu.github.io/tum-web-lab6/)
+[Live Demo]()
 
 ---
 
